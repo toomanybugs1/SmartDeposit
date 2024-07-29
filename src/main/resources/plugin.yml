@@ -2,3 +2,9 @@ api-version: 1.16
 name: SmartDeposit
 main: io.github.toomanybugs1.smartdeposit.SmartDeposit
 version: 0.0.1-SNAPSHOT
+commands:
+    togglesmartdeposit:
+        description: Turns Smart Deposit on or off.
+        usage: /togglesmartdeposit
+        permission: SmartDeposit.toggle
+        permission-message: You don't have permission to change this.
