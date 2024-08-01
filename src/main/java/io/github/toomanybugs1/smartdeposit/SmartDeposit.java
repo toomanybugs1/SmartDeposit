@@ -7,8 +7,8 @@ import org.bukkit.Location;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.DoubleChestInventory;
 import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -86,36 +86,28 @@ public class SmartDeposit extends JavaPlugin {
     	int yLoc = pLoc.getBlockY();
     	int zLoc = pLoc.getBlockZ();
     	
-    	ArrayList<InventoryHolder> doubleChests = new ArrayList<InventoryHolder>();
+    	ArrayList<DoubleChest> doubleChests = new ArrayList<DoubleChest>();
     	
     	for (int i = xLoc - radius; i < xLoc + radius; i++) {
     		for (int j = yLoc - radius; j < yLoc + radius; j++) {
     			for (int k = zLoc - radius; k < zLoc + radius; k++) {
     				BlockState b = world.getBlockAt(i, j, k).getState();
     				
-    				if (b instanceof DoubleChest) {
-    					DoubleChest chest = (DoubleChest) b;
+    				if (b instanceof Chest) {
+    					Chest chest = (Chest) b;
+    					Inventory inventory = chest.getInventory();
     					
-    					if (!doubleChests.contains(chest.getLeftSide()) && 
-    					    !doubleChests.contains(chest.getRightSide())) {
+    					if (inventory instanceof DoubleChestInventory) {
+    						DoubleChest doubleChest = (DoubleChest) inventory.getHolder();
     						
-        					if (chest.getLeftSide() != null) {
-        						doubleChests.add(chest.getLeftSide());
-        					}
-        					else {
-        						doubleChests.add(chest.getRightSide());
-        					}
-        					
-    						chestList.add(chest.getInventory());
+    						if (!doubleChests.contains(doubleChest)) {
+    							chestList.add(inventory);
+    							doubleChests.add(doubleChest);
+    						}
     					}
-    					
-    				}
-    				else if (b instanceof Chest) {
-						Chest chest = (Chest) b;
-						chestList.add(chest.getBlockInventory());
-					}
-    				else {
-    					// Do nothing, not a chest.
+    					else {
+    						chestList.add(inventory);
+    					}
     				}
     			}
     		}

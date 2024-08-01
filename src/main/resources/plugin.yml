@@ -1,10 +1,10 @@
 api-version: 1.16
 name: SmartDeposit
 main: io.github.toomanybugs1.smartdeposit.SmartDeposit
-version: 0.0.1-SNAPSHOT
+version: 0.5.0
 commands:
     sd:
-        description: Deposits inventory into chests with like-materials automatically.
+        description: Deposits inventory into nearby chests with like-materials automatically.
         usage: /sd
         permission: SmartDeposit.deposit
         permission-message: You don't have permission to use smart deposit.
