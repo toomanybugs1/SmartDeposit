@@ -25,8 +25,7 @@ public class SmartDeposit extends JavaPlugin {
 	int chestRadius;
 	
 	@Override
-    public void onEnable() {
-		
+    public void onEnable() {		
 		this.saveDefaultConfig();
     }
     
@@ -50,7 +49,6 @@ public class SmartDeposit extends JavaPlugin {
         } else {
             sender.sendMessage("Only players can use this command.");
         }
-
 
         return true;
     }
@@ -123,7 +121,6 @@ public class SmartDeposit extends JavaPlugin {
      * @return Boolean, true if anything was deposited, false if not.
      */
     private boolean depositToChest(PlayerInventory playerInv, Inventory chestInv) {
-    	// iterate over SLOTS not just item stacks
     	for(ItemStack playerItem : playerInv.getStorageContents()) {
     	    if (playerItem != null && chestInv.contains(playerItem.getType())) {
     	    	HashMap<Integer, ItemStack> leftOverItems = chestInv.addItem(playerItem);
