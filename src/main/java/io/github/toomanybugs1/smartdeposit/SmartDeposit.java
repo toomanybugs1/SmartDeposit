@@ -21,36 +21,76 @@ import net.md_5.bungee.api.ChatColor;
 
 public class SmartDeposit extends JavaPlugin {
 	
-	final int CHEST_RADIUS = 5;
 	int chestRadius;
 	
 	@Override
     public void onEnable() {		
 		this.saveDefaultConfig();
+
+        this.chestRadius = this.getConfig().getInt("deposit-radius");
     }
     
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
 
-        if (!cmd.getName().equalsIgnoreCase("sd") || args.length != 0)
-            return false;
-
-        if (sender instanceof Player) {
-
-        	if (this.smartDeposit((Player) sender)) {
-        		sender.sendMessage(ChatColor.GOLD + "[SmartDeposit] "
-                        + ChatColor.DARK_GREEN + "Deposited inventory successfully.");
-        	}
+        if (cmd.getName().equalsIgnoreCase("sd") && args.length == 0) {
+        	if (sender instanceof Player) {
+        		
+        		Player player = (Player) sender;
+        		
+        		if (player.hasPermission("smartdeposit.deposit")) {
+        			if (this.smartDeposit(player)) {
+                		player.sendMessage(ChatColor.GOLD + "[SmartDeposit] "
+                                + ChatColor.DARK_GREEN + "Deposited inventory successfully.");
+                	}
+                	else {
+                		player.sendMessage(ChatColor.GOLD + "[SmartDeposit] "
+                                + ChatColor.DARK_RED + "Nothing can be deposited or chests not in range.");
+                	}
+        		}
+        		else {
+        			sender.sendMessage(ChatColor.GOLD + "[SmartDeposit] " + ChatColor.RED + "Only players with permissions can use this command.");
+        		}
+            } 
         	else {
-        		sender.sendMessage(ChatColor.GOLD + "[SmartDeposit] "
-                        + ChatColor.DARK_RED + "Could not deposit your inventory.");
-        	}
-            
-        } else {
-            sender.sendMessage("Only players can use this command.");
-        }
+                sender.sendMessage("Only players can use this command.");
+            }
 
-        return true;
+            return true;
+        }
+        else if (cmd.getName().equalsIgnoreCase("sd-radius") && args.length == 1) {
+        	if (sender instanceof Player) {
+        		Player player = (Player) sender;
+        		int newRad;
+
+        		if (player.hasPermission("smartdeposit.radius")) {
+	        		try {
+	            		newRad = Integer.parseInt(args[0]);
+	            	}
+	            	catch (Exception e) {
+	            		sender.sendMessage(ChatColor.GOLD + "[SmartDeposit] " + ChatColor.RED + "Radius must be a number.");
+	            		return false;
+	            	}
+	        		
+	        		this.getConfig().set("deposit-radius", newRad);
+	        		this.saveConfig();
+	        		
+	        		sender.sendMessage(ChatColor.GOLD + "[SmartDeposit] "
+	                        + ChatColor.DARK_GREEN + "Saved deposit radius.");
+        		}
+        		else {
+        			sender.sendMessage(ChatColor.GOLD + "[SmartDeposit] " + ChatColor.RED + "Only players with permissions can use this command.");
+        		}
+            } 
+        	else {
+                sender.sendMessage("Only players can use this command.");
+            }
+
+        	return true;
+        }
+        else {
+        	return false;
+        }
     }
     
     /**
@@ -59,15 +99,20 @@ public class SmartDeposit extends JavaPlugin {
      * @return Boolean, true if we deposited any items, false if we didn't.
      */
     private boolean smartDeposit(Player player) {
-    	
-    	ArrayList<Inventory> chestInvs = getChests(player.getLocation(), CHEST_RADIUS, player.getWorld());
+    	ArrayList<Inventory> chestInvs = getChests(player.getLocation(), player.getWorld());
     	PlayerInventory pInv = player.getInventory();
     	
+    	boolean didDeposit = false;
+    	
     	for (Inventory chest : chestInvs) {
-    		depositToChest(pInv, chest);
+    		boolean curDeposit = depositToChest(pInv, chest);
+    
+    		if (!didDeposit && curDeposit) {
+    			didDeposit = true;
+    		}
     	}	
     	
-    	return true;
+    	return didDeposit;
     }
     
     /**
@@ -77,8 +122,9 @@ public class SmartDeposit extends JavaPlugin {
     * @param world The world object in which the player exists.
     * @return List of the inventories of the chests found in the radius around the player.
     */
-    private ArrayList<Inventory> getChests(Location pLoc, int radius, World world) {
+    private ArrayList<Inventory> getChests(Location pLoc, World world) {
     	ArrayList<Inventory> chestList = new ArrayList<Inventory>();
+    	this.chestRadius = this.getConfig().getInt("deposit-radius");
     	
     	int xLoc = pLoc.getBlockX();
     	int yLoc = pLoc.getBlockY();
@@ -86,9 +132,9 @@ public class SmartDeposit extends JavaPlugin {
     	
     	ArrayList<DoubleChest> doubleChests = new ArrayList<DoubleChest>();
     	
-    	for (int i = xLoc - radius; i < xLoc + radius; i++) {
-    		for (int j = yLoc - radius; j < yLoc + radius; j++) {
-    			for (int k = zLoc - radius; k < zLoc + radius; k++) {
+    	for (int i = xLoc - this.chestRadius; i < xLoc + this.chestRadius; i++) {
+    		for (int j = yLoc - this.chestRadius; j < yLoc + this.chestRadius; j++) {
+    			for (int k = zLoc - this.chestRadius; k < zLoc + this.chestRadius; k++) {
     				BlockState b = world.getBlockAt(i, j, k).getState();
     				
     				if (b instanceof Chest) {
@@ -121,19 +167,29 @@ public class SmartDeposit extends JavaPlugin {
      * @return Boolean, true if anything was deposited, false if not.
      */
     private boolean depositToChest(PlayerInventory playerInv, Inventory chestInv) {
+    	boolean didDeposit = false;
+    	
     	for(ItemStack playerItem : playerInv.getStorageContents()) {
     	    if (playerItem != null && chestInv.contains(playerItem.getType())) {
+    	    	int itemAmtBeforeDeposit = playerItem.getAmount();	
+    	    	
     	    	HashMap<Integer, ItemStack> leftOverItems = chestInv.addItem(playerItem);
     	    	
     	    	if (!leftOverItems.isEmpty()) {
-    	    		playerItem.setAmount(((ItemStack) leftOverItems.values().toArray()[0]).getAmount());
+    	    		int newItemAmt = ((ItemStack) leftOverItems.values().toArray()[0]).getAmount();
+    	    		
+    	    		if (newItemAmt != itemAmtBeforeDeposit) {
+    	    			playerItem.setAmount(newItemAmt);
+    	    			didDeposit = true;
+    	    		}
     	    	}
     	    	else {
     	    		playerInv.remove(playerItem);
+    	    		didDeposit = true;
     	    	}
     	    }
     	}
     	
-    	return true;
+    	return didDeposit;
     }
 }

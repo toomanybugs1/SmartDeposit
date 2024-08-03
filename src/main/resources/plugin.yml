@@ -5,6 +5,11 @@ version: 0.5.0
 commands:
     sd:
         description: Deposits inventory into nearby chests with like-materials automatically.
-        usage: /sd
-        permission: SmartDeposit.deposit
+        usage: Usage - /sd
+        permission: smartdeposit.deposit
         permission-message: You don't have permission to use smart deposit.
+    sd-radius:
+        description: Changes the radius of the SmartDeposit command.
+        usage: Usage - /sd-radius <radius>
+        permission: smartdeposit.radius
+        permission-message: You don't have permission to change the smart deposit radius.
