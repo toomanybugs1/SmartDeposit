@@ -13,3 +13,10 @@ commands:
         usage: Usage - /sd-radius <radius>
         permission: smartdeposit.radius
         permission-message: You don't have permission to change the smart deposit radius.
+permissions:
+    smartdeposit.deposit:
+        description: Allows usage of the smart deposit command
+        default: not op
+    smartdeposit.radius:
+        description: Allows modification of smart deposit radius
+        default: op
